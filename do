@@ -1,6 +1,10 @@
 #!/bin/bash
 
-FOLDER=.venv
+set -e
+
+FOLDER=$(dirname $(realpath $0))/.venv
+PIP=$FOLDER/bin/pip
+PYTHON=$FOLDER/bin/python
 
 if [ $# -eq 0 ]; then
     ACTION='activate'
@@ -10,46 +14,39 @@ fi
 
 case "$ACTION" in
 
-    "activate")
-        . venv/bin/activate
-        ;;
-
-    "deactivate")
-        deactivate
-        ;;
-
     "setup")
         if [ ! -d $FOLDER ]; then
             virtualenv $FOLDER
         fi
 
-        deactivate
-        source $FOLDER/bin/activate
+        $PIP install --upgrade ConfigParser
+        $PIP install --upgrade pyaml
+        $PIP install --upgrade pyserial
+        $PIP install --upgrade nose
 
-        pip install ConfigParser
-        pip install pyaml
-        pip install pyserial
-        pip install nose
+        wget https://bitbucket.org/oojah/mosquitto/raw/v1.3/lib/python/mosquitto.py \
+			-O $FOLDER/lib/python2.7/site-packages/mosquitto.py
 
-        wget https://bitbucket.org/oojah/mosquitto/raw/v1.3/lib/python/mosquitto.py
-        mv mosquitto.py $FOLDER/lib/python2.7/site-packages/
+        TMPDIR=$(mktemp -d)
+        wget https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/xoseperez-python-xbee/source-archive.zip \
+            -O $TMPDIR/xoseperez-python-xbee.zip
+        unzip $TMPDIR/xoseperez-python-xbee.zip -d $TMPDIR
 
-        hg clone https://xose.perez@code.google.com/r/xoseperez-python-xbee tmp
-        cd tmp
-        python setup.py install
-        cd ..
-        rm -rf tmp
+        cd $TMPDIR/xoseperez-python-xbee/
+        $PYTHON setup.py install
+        cd -
         ;;
 
     "start" | "stop" | "restart")
-        source $FOLDER/bin/activate
-        python xbee2mqtt.py $ACTION
-        deactivate
+        $PYTHON xbee2mqtt.py $ACTION
         ;;
 
     "tests")
-        source $FOLDER/bin/activate
-        .venv/bin/nosetests
+        $PYTHON $FOLDER/bin/nosetests
+        ;;
+
+    "console")
+        $PYTHON xbee2console.py
         ;;
 
     *)
