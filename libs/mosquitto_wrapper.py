@@ -38,6 +38,9 @@ class MosquittoWrapper(Mosquitto):
 
     host = 'localhost'
     port = 1883
+    username = None
+    password = None
+
     keepalive = 60
     qos = 0
     retain = False
@@ -66,6 +69,8 @@ class MosquittoWrapper(Mosquitto):
         self.on_disconnect = self.__on_disconnect
         self.on_subscribe = self.__on_subscribe
         self.on_log = self.__on_log
+        if self.username:
+            self.username_pw_set(self.username, self.password)
         if self.set_will:
             self.will_set(self.status_topic % self._client_id, "0", self.qos, self.retain)
         self.log(logging.INFO, "Connecting to MQTT broker")

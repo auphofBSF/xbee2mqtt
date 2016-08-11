@@ -168,6 +168,8 @@ if __name__ == "__main__":
     mqtt = MosquittoWrapper(config.get('mqtt', 'client_id', None))
     mqtt.host = config.get('mqtt', 'host', 'localhost')
     mqtt.port = config.get('mqtt', 'port', 1883)
+    mqtt.username = config.get('mqtt', 'username', None)
+    mqtt.password = config.get('mqtt', 'password', None)
     mqtt.keepalive = config.get('mqtt', 'keepalive', 60)
     mqtt.clean_session = config.get('mqtt', 'clean_session', False)
     mqtt.qos = config.get('mqtt', 'qos', 0)
