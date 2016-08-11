@@ -22,7 +22,7 @@ __contact__ = "xose.perez@gmail.com"
 __copyright__ = "Copyright (C) 2013 Xose Pérez"
 __license__ = 'GPL v3'
 
-from mosquitto import Mosquitto
+from paho.mqtt.client import Client as Mosquitto
 import ctypes
 import time
 import logging
@@ -61,11 +61,11 @@ class MosquittoWrapper(Mosquitto):
         """
         Connects to the Mosquitto broker with the pre-configured parameters
         """
-        self.on_connect = self._on_connect
-        self.on_message = self._on_message
-        self.on_disconnect = self._on_disconnect
-        self.on_subscribe = self._on_subscribe
-        self.on_log = self._on_log
+        self.on_connect = self.__on_connect
+        self.on_message = self.__on_message
+        self.on_disconnect = self.__on_disconnect
+        self.on_subscribe = self.__on_subscribe
+        self.on_log = self.__on_log
         if self.set_will:
             self.will_set(self.status_topic % self._client_id, "0", self.qos, self.retain)
         self.log(logging.INFO, "Connecting to MQTT broker")
@@ -90,7 +90,7 @@ class MosquittoWrapper(Mosquitto):
         retain = retain if retain is not None else self.retain
         Mosquitto.publish(self, topic, str(value), qos, retain)
 
-    def _on_connect(self, mosq, obj, rc):
+    def __on_connect(self, mosq, obj, flags, rc):
         """
         Callback when connection to the MQTT broker has succedeed or failed
         """
@@ -103,7 +103,7 @@ class MosquittoWrapper(Mosquitto):
             self.log(logging.ERROR , "Could not connect to MQTT broker")
             self.connected = False
 
-    def _on_disconnect(self, mosq, obj, rc):
+    def __on_disconnect(self, mosq, obj, rc):
         """
         Callback when disconnecting from the MQTT broker
         """
@@ -113,7 +113,7 @@ class MosquittoWrapper(Mosquitto):
             time.sleep(3)
             self.connect()
 
-    def _on_message(self, mosq, obj, msg):
+    def __on_message(self, mosq, obj, msg):
         """
         Incoming message
         """
@@ -124,14 +124,14 @@ class MosquittoWrapper(Mosquitto):
                 message = msg.payload
             self.on_message_cleaned(msg.topic, message)
 
-    def _on_subscribe(self, mosq, obj, mid, qos_list):
+    def __on_subscribe(self, mosq, obj, mid, qos_list):
         """
         Callback when succeeded subscription
         """
         topic = self._subscriptions.get(mid, 'Unknown')
         self.log(logging.INFO, "Subscription to topic %s confirmed" % topic)
 
-    def _on_log(self, mosq, obj, level, string):
+    def __on_log(self, mosq, obj, level, string):
         self.log(logging.DEBUG, string)
 
 

@@ -23,9 +23,7 @@ case "$ACTION" in
         $PIP install --upgrade pyaml
         $PIP install --upgrade pyserial
         $PIP install --upgrade nose
-
-        wget https://bitbucket.org/oojah/mosquitto/raw/v1.3/lib/python/mosquitto.py \
-			-O $FOLDER/lib/python2.7/site-packages/mosquitto.py
+        $PIP install --upgrade paho-mqtt
 
         TMPDIR=$(mktemp -d)
         wget https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/xoseperez-python-xbee/source-archive.zip \
