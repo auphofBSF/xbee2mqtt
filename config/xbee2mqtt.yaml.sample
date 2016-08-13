@@ -15,11 +15,11 @@ general:
             battery: /home/powermeter/sensor/battery
             power: /home/general/power
         0013a200406bfd09:
-            adc7: /home/door/sensor/battery
-            dio12: /home/door/status
+            adc-7: /home/door/sensor/battery
+            dio-12: /home/door/status
         0013a2004092d70b:
-            dio10: /test/dio10
-            dio11: /test/dio11
+            dio-10: /test/dio10
+            dio-11: /test/dio11
 
 radio:
     port: /dev/ttyUSB0

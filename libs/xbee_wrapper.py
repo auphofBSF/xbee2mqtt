@@ -28,13 +28,13 @@ import re
 import glob
 import binascii
 import logging
-from xbee import XBee
+from xbee import ZigBee as XBee
 
 class XBeeWrapper(object):
     """
     Helper class for the python-xbee module.
     It processes API packets into simple address/port/value groups.
-    See http://code.google.com/r/xoseperez-python-xbee/
+    See https://python-xbee.readthedocs.io/
     """
 
     default_port_name = 'serial'
@@ -77,15 +77,15 @@ class XBeeWrapper(object):
 
         self.log(logging.DEBUG, packet)
 
-        address = packet['source_addr_long']
-        frame_id = int(packet['frame_id'])
+        address = binascii.hexlify(packet['source_addr_long'])
+        id = packet['id']
 
         # Data sent through the serial connection of the remote radio
-        if (frame_id == 90):
+        if (id == "rx"):
 
             # Some streams arrive split in different packets
             # we buffer the data until we get an EOL
-            self.buffer[address] = self.buffer.get(address,'') + packet['data']
+            self.buffer[address] = self.buffer.get(address,'') + packet['rf_data']
             count = self.buffer[address].count('\n')
             if (count):
                 lines = self.buffer[address].splitlines()
@@ -103,11 +103,12 @@ class XBeeWrapper(object):
                     self.on_message(address, port, value)
 
         # Data received from an IO data sample
-        if (frame_id == 92):
-            for port, value in packet['samples'].iteritems():
-                if port[:3] == 'dio':
-                    value = 1 if value else 0
-                self.on_message(address, port, value)
+        elif (id == "rx_io_data_long_addr"):
+            for sample in packet['samples']:
+                for port, value in sample.iteritems():
+                    if port[:4] == 'dio-':
+                        value = 1 if value else 0
+                    self.on_message(address, port, value)
 
     def on_message(self, address, port, value):
         """
@@ -122,9 +123,9 @@ class XBeeWrapper(object):
         """
         try:
 
-            if port[:3] == 'dio':
+            if port[:4] == 'dio-':
                 address = binascii.unhexlify(address)
-                number = int(port[3:])
+                number = int(port[4:])
                 command = 'P%d' % (number - 10) if number>9 else 'D%d' % number
                 value = binascii.unhexlify('0' + str(int(value) + 4))
                 self.xbee.remote_at(dest_addr_long = address, command = command, parameter = value)

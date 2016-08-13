@@ -63,11 +63,11 @@ class TestXBee(unittest.TestCase):
         self.wait()
         self.assertEquals(2, len(self.messages))
         self.assertEquals('0013a200406bfd09', self.messages[0]['address'])
-        self.assertEquals('adc7', self.messages[0]['port'])
-        self.assertEquals(2816, self.messages[0]['value'])
+        self.assertEquals('adc-7', self.messages[1]['port'])
+        self.assertEquals(2816, self.messages[1]['value'])
         self.assertEquals('0013a200406bfd09', self.messages[1]['address'])
-        self.assertEquals('dio12', self.messages[1]['port'])
-        self.assertEquals(1, self.messages[1]['value'])
+        self.assertEquals('dio-12', self.messages[0]['port'])
+        self.assertEquals(1, self.messages[0]['value'])
 
 if __name__ == '__main__':
     unittest.main()

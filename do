@@ -24,15 +24,7 @@ case "$ACTION" in
         $PIP install --upgrade pyserial
         $PIP install --upgrade nose
         $PIP install --upgrade paho-mqtt
-
-        TMPDIR=$(mktemp -d)
-        wget https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/xoseperez-python-xbee/source-archive.zip \
-            -O $TMPDIR/xoseperez-python-xbee.zip
-        unzip $TMPDIR/xoseperez-python-xbee.zip -d $TMPDIR
-
-        cd $TMPDIR/xoseperez-python-xbee/
-        $PYTHON setup.py install
-        cd -
+		$PIP install --upgrade xbee
         ;;
 
     "start" | "stop" | "restart")
@@ -40,7 +32,7 @@ case "$ACTION" in
         ;;
 
     "tests")
-        $PYTHON $FOLDER/bin/nosetests
+        $PYTHON $FOLDER/bin/nosetests --nocapture
         ;;
 
     "console")

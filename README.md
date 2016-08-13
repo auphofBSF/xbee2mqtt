@@ -10,34 +10,24 @@ You can read about this utility in my blog: [XBee to MQTT gateway](http://tinker
 
 All requirements will be installed in the virtual environment by running
 
-<pre>./do setup</pre>
+    $ ./do setup
 
 from the project root. If you don't want to use the virtualenv, you will have to install
 the requierements manually:
 
-* Modified version of the python-xbee library. You can get the forked code here:
-<pre>
-hg clone https://code.google.com/r/xoseperez-python-xbee python-xbee
-cd python-xbee
-python setup.py install
-</pre>
-
-* python-yaml
-<pre>apt-get install python-yaml</pre>
-
-* python-mosquitto
-<pre>apt-get install python-mosquitto</pre>
-
-* python-serial
-<pre>apt-get install python-serial</pre>
-
+    $ pip install ConfigParser
+    $ pip install pyaml
+    $ pip install pyserial
+    $ pip install nose
+    $ pip install paho-mqtt
+    $ pip install xbee
 
 ## Install
 
 Just clone or extract the code in some folder. I'm not providing an setup.py file yet.
 But you can install a local virtual environment using 
 
-<pre>./do setup</pre>
+    $ ./do setup
 
 
 ## Configuration
@@ -49,7 +39,7 @@ Rename or copy the xbee2mqtt.yaml.sample to xbee2mqtt.yaml and edit it. The conf
 
 **duplicate_check_window** lets you define a time window in seconds where messages for the same topic and with the same value will be ignored as duplicates.
 **default_topic_pattern** lets you define a default topic for every message. It accepts two placeholders: {address} for the radio address and {port}. 
-The port can be the radio pin (dio12, adc1, adc7,...) or a string for messages sent through the UART of the sending radio. 
+The port can be the radio pin (dio-12, adc-1, adc-7,...) or a string for messages sent through the UART of the sending radio.
 **routes** dictionary defines the topics map. 
 Set **publish_undefined_topic** False to filter out topics not defined in the routes dictionary. 
 If it's True and the route is not defined it will be mapped to a topic defined by the **default_topic_pattern**.
@@ -79,11 +69,11 @@ The processor is responsible for pre-processing the values before publishing the
 
 The util stays resident as a daemon. You can start it, stop it or restart it (to reload the configuration) by using:
 
-<pre>python xbee2mqtt.py start|stop|restart</pre>
+    $ python xbee2mqtt.py start|stop|restart
 
 or easier (it will login the virtual enviroment and execute the previous command):
 
-<pre>./do start</pre>
+    $ ./do start
 
 
 
