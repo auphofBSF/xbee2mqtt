@@ -19,7 +19,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __app__ = "Xbee to MQTT gateway"
-__version__ = "0.4.20130708"
+__version__ = "0.5.20160815"
 __author__ = "Xose Pérez"
 __contact__ = "xose.perez@gmail.com"
 __copyright__ = "Copyright (C) 2012-2013 Xose Pérez"
