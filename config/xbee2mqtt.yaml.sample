@@ -1,10 +1,11 @@
-general:
-
+daemon:
     pidfile: /tmp/xbee2mqtt.pid
     stderr: /tmp/xbee2mqtt.err
     stdout: /tmp/xbee2mqtt.log
 
     logging_level: 10
+
+general:
     duplicate_check_window: 5
     publish_undefined_topics: False
     default_topic_pattern: /raw/xbee/{address}/{port}

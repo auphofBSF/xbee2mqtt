@@ -44,7 +44,6 @@ class Xbee2MQTT(Daemon):
     Glues the different components together
     """
 
-    debug = True
     duplicate_check_window = 5
 
     logger = None
@@ -186,9 +185,9 @@ if __name__ == "__main__":
 
     processor = Processor(config.get('processor', 'filters', []))
 
-    xbee2mqtt = Xbee2MQTT(resolve_path(config.get('general', 'pidfile', '/tmp/xbee2mqtt.pid')))
-    xbee2mqtt.stdout = xbee2mqtt.stderr = resolve_path(config.get('general', 'stdout', '/dev/null'))
-    xbee2mqtt.debug = config.get('general', 'debug', False)
+    xbee2mqtt = Xbee2MQTT(resolve_path(config.get('daemon', 'pidfile', '/tmp/xbee2mqtt.pid')))
+    xbee2mqtt.stdout = resolve_path(config.get('daemon', 'stdout', '/dev/null'))
+    xbee2mqtt.stderr = resolve_path(config.get('daemon', 'stderr', xbee2mqtt.stdout))
     xbee2mqtt.duplicate_check_window = config.get('general', 'duplicate_check_window', 5)
     xbee2mqtt.default_topic_pattern = config.get('general', 'default_topic_pattern', '/raw/xbee/{address}/{port}')
     xbee2mqtt.publish_undefined_topics = config.get('general', 'publish_undefined_topics', True)
