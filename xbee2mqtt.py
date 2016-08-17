@@ -96,16 +96,10 @@ class Xbee2MQTT(Daemon):
             except Exception as e:
                 self.log(logging.ERROR, "Error while sending message (%e)" % e)
 
-
-    def xbee_on_message(self, address, port, value):
+    def mqtt_publish(self, topic, value):
         """
-        Message from the radio coordinator
+        Publishes a non duplicate value to a given topic
         """
-        self.log(logging.DEBUG, "Message received from radio: %s %s %s" % (address, port, value))
-        topic = self._routes.get(
-            (address, port),
-            self.default_topic_pattern.format(address=address, port=port) if self.publish_undefined_topics else False
-        )
         if topic:
 
             now = time.time()
@@ -121,6 +115,27 @@ class Xbee2MQTT(Daemon):
             self.log(logging.INFO, "Sending message to MQTT broker: %s %s" % (topic, value))
             self.mqtt.publish(topic, value)
 
+    def xbee_on_message(self, address, port, value):
+        """
+        Message from the radio coordinator
+        """
+        self.log(logging.DEBUG, "Message received from radio: %s %s %s" % (address, port, value))
+
+        topic = self._routes.get(
+            (address, port),
+            self.default_topic_pattern.format(address=address, port=port) if self.publish_undefined_topics else False
+        )
+        self.mqtt_publish(topic, value)
+
+    def xbee_on_identification(self, address, alias):
+        """
+        Identification message from remote node
+        """
+        value = time.strftime("%s")
+        self.log(logging.INFO, "Identification received from radio: %s (%s) %s" % (address, alias, value))
+        topic = self.default_topic_pattern.format(address=address, port="seen") if self.publish_undefined_topics else False
+        self.mqtt_publish(topic, value)
+
     def do_reload(self):
         self.log(logging.INFO, "Reloading")
         config = Config(config_file)
@@ -135,12 +150,18 @@ class Xbee2MQTT(Daemon):
         self.mqtt.on_message_cleaned = self.mqtt_on_message
         self.mqtt.subscribe_to = self._actions.keys()
         self.mqtt.logger = self.logger
+        self.xbee.on_identification = self.xbee_on_identification
+        self.xbee.on_node_discovery = self.xbee_on_identification
         self.xbee.on_message = self.xbee_on_message
         self.xbee.logger = self.logger
 
         self.mqtt.connect()
         if not self.xbee.connect():
             self.stop()
+
+        if self.discovery_on_connect:
+            self.log(logging.INFO, "Requesting Node Discovery")
+            self.xbee.xbee.at(command='ND')
 
         while True:
             try:
@@ -188,6 +209,7 @@ if __name__ == "__main__":
     xbee2mqtt = Xbee2MQTT(resolve_path(config.get('daemon', 'pidfile', '/tmp/xbee2mqtt.pid')))
     xbee2mqtt.stdout = resolve_path(config.get('daemon', 'stdout', '/dev/null'))
     xbee2mqtt.stderr = resolve_path(config.get('daemon', 'stderr', xbee2mqtt.stdout))
+    xbee2mqtt.discovery_on_connect = config.get('general', 'discovery_on_connect', True)
     xbee2mqtt.duplicate_check_window = config.get('general', 'duplicate_check_window', 5)
     xbee2mqtt.default_topic_pattern = config.get('general', 'default_topic_pattern', '/raw/xbee/{address}/{port}')
     xbee2mqtt.publish_undefined_topics = config.get('general', 'publish_undefined_topics', True)

@@ -78,7 +78,7 @@ class MosquittoWrapper(Mosquitto):
 
     def subscribe(self, topics):
         """
-        Publishes a value to a given topic, uses pre-loaded values for QoS and retain
+        Subscribe to a given topic
         """
         if not isinstance(topics, list):
             topics = [topics]

@@ -71,13 +71,19 @@ class XBeeWrapper(object):
     def process(self, packet):
         """
         Processes an incoming packet, supported packet frame ids:
-            0x90: Zigbee Receive Packet
-            0x92: ZigBee IO Data Sample Rx Indicator
+            0x90: Zigbee Receive Packet (rx)
+            0x92: ZigBee IO Data Sample Rx Indicator (rx_io_data_long_addr)
+            0x95: ZigBee Node Identification Indicator (node_id_indicator)
+            0x88: ZigBee AT Command Response (at_response)
         """
 
         self.log(logging.DEBUG, packet)
 
-        address = binascii.hexlify(packet['source_addr_long'])
+        try:
+            address = binascii.hexlify(packet['source_addr_long'])
+        except:
+            pass
+
         id = packet['id']
 
         # Data sent through the serial connection of the remote radio
@@ -109,6 +115,59 @@ class XBeeWrapper(object):
                     if port[:4] == 'dio-':
                         value = 1 if value else 0
                     self.on_message(address, port, value)
+
+        # Node Identification Indicator received
+        elif (id == "node_id_indicator"):
+            alias = packet['node_id']
+            self.on_identification(address, alias)
+
+        # Response received after a command request
+        elif (id == "at_response"):
+            status = packet['status']
+            command = packet['command']
+            response = packet['parameter']
+            self.on_response(status, command, response)
+
+    def on_identification(self, address, alias):
+        """
+        Hook for node identification message.
+        """
+        None
+
+    def on_node_discovery(self, address, alias):
+        """
+        Hook for node discovery
+        """
+        None
+
+    def on_response(self, status, command, response):
+        """
+        Hook for command responses.
+        """
+
+        if (status == '\x00'):
+            status_msg = "OK"
+        elif (status == '\x01'):
+            status_msg = "ERROR"
+        elif (status == '\x02'):
+            status_msg = "Invalid Command"
+        elif (status == '\x03'):
+            status_msg = "Invalid Parameter"
+        elif (status == '\x04'):
+            status_msg = "Tx Failure"
+        else:
+            status_msg = "Unknown"
+
+        self.log(logging.INFO,
+            "AT response for command: %s, status: %s" % (command, status_msg)
+        )
+
+        if (command == 'ND'):
+            alias = response['node_identifier']
+            address = binascii.hexlify(response['source_addr_long'])
+            self.on_node_discovery(address, alias)
+        else:
+            self.log(logging.WARNING, "Command response (%s) not implemented." % command)
 
     def on_message(self, address, port, value):
         """
