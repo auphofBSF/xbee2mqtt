@@ -75,6 +75,7 @@ class XBeeWrapper(object):
             0x92: ZigBee IO Data Sample Rx Indicator (rx_io_data_long_addr)
             0x95: ZigBee Node Identification Indicator (node_id_indicator)
             0x88: ZigBee AT Command Response (at_response)
+            0x97: ZigBee Remote Command Response (remote_at_response)
         """
 
         self.log(logging.DEBUG, packet)
@@ -121,12 +122,19 @@ class XBeeWrapper(object):
             alias = packet['node_id']
             self.on_identification(address, alias)
 
-        # Response received after a command request
+        # Response received after a local command request
         elif (id == "at_response"):
             status = packet['status']
             command = packet['command']
             response = packet['parameter']
-            self.on_response(status, command, response)
+            self.on_response(status, command, response, "local")
+
+        # Response received after a remote command request
+        elif (id == "remote_at_response"):
+            status = packet['status']
+            command = packet['command']
+            response = packet['parameter']
+            self.on_response(status, command, response, address)
 
     def on_identification(self, address, alias):
         """
@@ -140,11 +148,10 @@ class XBeeWrapper(object):
         """
         None
 
-    def on_response(self, status, command, response):
+    def on_response(self, status, command, response, address):
         """
         Hook for command responses.
         """
-
         if (status == '\x00'):
             status_msg = "OK"
         elif (status == '\x01'):
