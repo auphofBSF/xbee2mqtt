@@ -173,6 +173,10 @@ class XBeeWrapper(object):
             alias = response['node_identifier']
             address = binascii.hexlify(response['source_addr_long'])
             self.on_node_discovery(address, alias)
+        elif (re.match('[DP]\d', command)):
+            port = "pin-%s" % command[1:]
+            value = int(binascii.hexlify(response), 16)
+            self.on_message(address, port, value)
         else:
             self.log(logging.WARNING, "Command response (%s) not implemented." % command)
 
@@ -182,11 +186,36 @@ class XBeeWrapper(object):
         """
         None
 
+    def send_query(self, address, ports = None):
+        """
+        Request current configuration of given ports
+        """
+        if ports is None:
+            ports = [ "pin-%s" % x for x in range(13) ]
+
+        if not isinstance(ports, list):
+            ports = [ports]
+
+        self.log(logging.INFO, "Request configuration for %s at %s" % (ports, address))
+        address = binascii.unhexlify(address)
+
+        for port in ports:
+
+            if port[:4] not in [ 'adc-', 'dio-', 'pin-' ]:
+                continue
+
+            number = int(port[4:])
+            command = 'P%d' % (number - 10) if number>9 else 'D%d' % number
+            self.xbee.remote_at(dest_addr_long = address, command = command, frame_id="A")
+
     def send_message(self, address, port, value, permanent = True):
         """
         Sends a message to a remote radio
         Currently, this only supports setting a digital output pin LOW (4) or HIGH (5)
         """
+        self.log(logging.DEBUG,
+            "Sending message to address: %s, port: %s, value: %s" % (address, port, value)
+        )
         try:
 
             if port[:4] == 'dio-':
@@ -197,9 +226,8 @@ class XBeeWrapper(object):
                 self.xbee.remote_at(dest_addr_long = address, command = command, parameter = value)
                 self.xbee.remote_at(dest_addr_long = address, command = 'WR' if permanent else 'AC')
                 return True
-
-        except:
-            pass
+        except Exception as e:
+             self.log(logging.ERROR, "Error while sending message (%e)" % e)
 
         return False
 
