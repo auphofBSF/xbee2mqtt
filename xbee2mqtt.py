@@ -32,6 +32,7 @@ import logging
 
 #from tests.SerialMock import Serial
 from serial import Serial
+from serial import SerialException
 from libs.daemon import Daemon
 from libs.processor import Processor
 from libs.config import Config
@@ -175,10 +176,14 @@ if __name__ == "__main__":
     mqtt.retain = config.get('mqtt', 'retain', True)
     mqtt.set_will = config.get('mqtt', 'set_will', True)
 
-    serial = Serial(
-        config.get('radio', 'port', '/dev/ttyUSB0'),
-        config.get('radio', 'baudrate', 9600)
-    )
+    try:
+        serial = Serial(
+            config.get('radio', 'port', '/dev/ttyUSB0'),
+            config.get('radio', 'baudrate', 9600)
+        )
+    except SerialException as e:
+        sys.exit(e)
+
     xbee = XBeeWrapper()
     xbee.serial = serial
     xbee.default_port_name = config.get('radio', 'default_port_name', 'serial')
