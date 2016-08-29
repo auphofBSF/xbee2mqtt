@@ -32,13 +32,13 @@ import logging
 
 #from tests.SerialMock import Serial
 from serial import Serial
-from libs.daemon import Daemon
+from service import Service
 from libs.processor import Processor
 from libs.config import Config
 from libs.mosquitto_wrapper import MosquittoWrapper
 from libs.xbee_wrapper import XBeeWrapper
 
-class Xbee2MQTT(Daemon):
+class Xbee2MQTT(Service):
     """
     Xbee2MQTT daemon.
     Glues the different components together
@@ -164,7 +164,7 @@ class Xbee2MQTT(Daemon):
             self.log(logging.INFO, "Requesting Node Discovery")
             self.xbee.xbee.at(command='ND')
 
-        while True:
+        while not self.got_sigterm():
             try:
                 self.mqtt.loop()
             except Exception as e:
@@ -207,7 +207,7 @@ if __name__ == "__main__":
 
     processor = Processor(config.get('processor', 'filters', []))
 
-    xbee2mqtt = Xbee2MQTT(resolve_path(config.get('daemon', 'pidfile', '/tmp/xbee2mqtt.pid')))
+    xbee2mqtt = Xbee2MQTT("xbee2mqtt", pid_dir=resolve_path(config.get('daemon', 'pid_dir', '/tmp/')))
     xbee2mqtt.stdout = resolve_path(config.get('daemon', 'stdout', '/dev/null'))
     xbee2mqtt.stderr = resolve_path(config.get('daemon', 'stderr', xbee2mqtt.stdout))
     xbee2mqtt.discovery_on_connect = config.get('general', 'discovery_on_connect', True)
@@ -221,20 +221,24 @@ if __name__ == "__main__":
     xbee2mqtt.processor = processor
     xbee2mqtt.config_file = config_file
 
-    if len(sys.argv) == 2:
-        if 'start' == sys.argv[1]:
-            xbee2mqtt.start()
-        elif 'stop' == sys.argv[1]:
-            xbee2mqtt.stop()
-        elif 'restart' == sys.argv[1]:
-            xbee2mqtt.restart()
-        elif 'reload' == sys.argv[1]:
-            xbee2mqtt.reload()
-        else:
-            print "Unknown command"
-            sys.exit(2)
-        sys.exit(0)
-    else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
-        sys.exit(2)
+    if len(sys.argv) != 2:
+        sys.exit("usage: %s start|stop|restart|reload|status" % sys.argv[0])
 
+    cmd = sys.argv[1].lower()
+    if cmd == 'start':
+        xbee2mqtt.start()
+        if not xbee2mqtt.is_running():
+            print "start failed."
+    elif cmd == 'stop':
+        xbee2mqtt.stop()
+    elif cmd == 'restart':
+        xbee2mqtt.restart()
+    elif cmd == 'reload':
+        xbee2mqtt.reload()
+    elif cmd == 'status':
+        if xbee2mqtt.is_running():
+            print "xbee2mqtt is running."
+        else:
+            print "xbee2mqtt is not running."
+    else:
+        sys.exit('Unknown command "%s"' % cmd)

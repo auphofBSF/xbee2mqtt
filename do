@@ -20,6 +20,7 @@ case "$ACTION" in
         fi
 
         $PIP install --upgrade ConfigParser
+        $PIP install --upgrade Service
         $PIP install --upgrade pyaml
         $PIP install --upgrade pyserial
         $PIP install --upgrade nose
@@ -27,7 +28,7 @@ case "$ACTION" in
 		$PIP install --upgrade xbee
         ;;
 
-    "start" | "stop" | "restart")
+    "start" | "stop" | "restart" | "status")
         $PYTHON xbee2mqtt.py $ACTION
         ;;
 
