@@ -31,6 +31,7 @@ import time
 import logging
 
 #from tests.SerialMock import Serial
+from parse import parse
 from serial import Serial
 from libs.daemon import Daemon
 from libs.processor import Processor
@@ -88,6 +89,9 @@ class Xbee2MQTT(Daemon):
         self.log(logging.DEBUG, "Message received from MQTT broker: %s %s" % (topic, message))
 
         data = self._actions.get(topic, None)
+        if data is None:
+            result = parse(self.default_input_topic_pattern, topic).named
+            data = { result['address'], result['port'] }
         if data:
             address, port = data
             self.log(logging.INFO, "Setting radio %s port %s to %s" % (address, port, message))
@@ -123,8 +127,15 @@ class Xbee2MQTT(Daemon):
 
         topic = self._routes.get(
             (address, port),
-            self.default_topic_pattern.format(address=address, port=port) if self.publish_undefined_topics else False
+            self.default_topic_pattern.format(address=address, port=port) if self.expose_undefined_topics else False
         )
+        prefix = port[:4]
+        if self.expose_undefined_topics and prefix in ['dio-', 'pin-']:
+            self.mqtt.subscribe(self.default_input_topic_pattern.format(address=address, port=port))
+            if prefix == 'pin-' and value in [4, 5]:
+                number = port[4:]
+                port = 'dio-%s' % number
+                self.mqtt.subscribe(self.default_input_topic_pattern.format(address=address, port=port))
         self.mqtt_publish(topic, value)
 
     def xbee_on_identification(self, address, alias):
@@ -133,7 +144,7 @@ class Xbee2MQTT(Daemon):
         """
         value = time.strftime("%s")
         self.log(logging.INFO, "Identification received from radio: %s (%s) %s" % (address, alias, value))
-        topic = self.default_topic_pattern.format(address=address, port="seen") if self.publish_undefined_topics else False
+        topic = self.default_topic_pattern.format(address=address, port="seen") if self.expose_undefined_topics else False
         self.mqtt_publish(topic, value)
         self.xbee.send_query(address)
 
@@ -213,7 +224,13 @@ if __name__ == "__main__":
     xbee2mqtt.discovery_on_connect = config.get('general', 'discovery_on_connect', True)
     xbee2mqtt.duplicate_check_window = config.get('general', 'duplicate_check_window', 5)
     xbee2mqtt.default_topic_pattern = config.get('general', 'default_topic_pattern', '/raw/xbee/{address}/{port}')
+    xbee2mqtt.default_input_topic_pattern = config.get(
+        'general', 'default_input_topic_pattern', xbee2mqtt.default_topic_pattern + '/set'
+    )
     xbee2mqtt.publish_undefined_topics = config.get('general', 'publish_undefined_topics', True)
+    xbee2mqtt.expose_undefined_topics = config.get(
+        'general', 'expose_undefined_topics', xbee2mqtt.publish_undefined_topics
+    )
     xbee2mqtt.load(config.get('general', 'routes', {}))
     xbee2mqtt.logger = logger
     xbee2mqtt.mqtt = mqtt

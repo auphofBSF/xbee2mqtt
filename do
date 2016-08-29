@@ -24,6 +24,7 @@ case "$ACTION" in
         $PIP install --upgrade pyserial
         $PIP install --upgrade nose
         $PIP install --upgrade paho-mqtt
+		$PIP install --upgrade parse
 		$PIP install --upgrade xbee
         ;;
 

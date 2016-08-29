@@ -8,7 +8,7 @@ daemon:
 general:
     discovery_on_connect: True
     duplicate_check_window: 5
-    publish_undefined_topics: False
+    expose_undefined_topics: False
     default_topic_pattern: /raw/xbee/{address}/{port}
 
     routes:
