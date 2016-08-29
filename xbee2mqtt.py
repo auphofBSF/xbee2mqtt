@@ -135,6 +135,7 @@ class Xbee2MQTT(Daemon):
         self.log(logging.INFO, "Identification received from radio: %s (%s) %s" % (address, alias, value))
         topic = self.default_topic_pattern.format(address=address, port="seen") if self.publish_undefined_topics else False
         self.mqtt_publish(topic, value)
+        self.xbee.send_query(address)
 
     def do_reload(self):
         self.log(logging.INFO, "Reloading")
