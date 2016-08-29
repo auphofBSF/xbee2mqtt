@@ -26,6 +26,7 @@ __copyright__ = "Copyright (C) 2012-2013 Xose Pérez"
 __license__ = 'GPL v3'
 
 import os
+import re
 import sys
 import time
 import logging
@@ -91,7 +92,21 @@ class Xbee2MQTT(Daemon):
         data = self._actions.get(topic, None)
         if data is None:
             result = parse(self.default_input_topic_pattern, topic).named
+
+            new_schema = re.search('{item}', self.default_topic_pattern)
+            if new_schema:
+                number = result['port'][4:]
+                item = result['item']
+
+                if item == 'analog':
+                    result['port'] = 'adc-%s' % number
+                elif item == 'digital':
+                    result['port'] = 'dio-%s' % number
+                elif item == 'config':
+                    result['port'] = 'pin-%s'
+
             data = { result['address'], result['port'] }
+
         if data:
             address, port = data
             self.log(logging.INFO, "Setting radio %s port %s to %s" % (address, port, message))
@@ -119,6 +134,32 @@ class Xbee2MQTT(Daemon):
             self.log(logging.INFO, "Sending message to MQTT broker: %s %s" % (topic, value))
             self.mqtt.publish(topic, value)
 
+    def transform_default_topic_pattern(self, address, port):
+        """
+        Transform default topic pattern to expand adc/dio ports if there is a {item} whitin
+        to keep compatibility with old topic patterns schemas.
+        """
+        prefix = port[:4]
+        if prefix == 'adc-':
+            item = 'analog'
+        elif prefix == 'dio-':
+            item = 'digital'
+        elif prefix == 'pin-':
+            item = 'config'
+        else:
+            item = ''
+
+        new_schema = re.search('{item}', self.default_topic_pattern)
+        if new_schema:
+            number = port[4:]
+            port = "pin-%s" % number if len(item)>0 else port
+            topic = self.default_topic_pattern.format(address=address, port=port, item=item)
+        else:
+            topic = self.default_topic_pattern.format(address=address, port=port)
+
+        # Clean excess slashes.
+        return re.sub('//+|/$', '', topic).rstrip('/')
+
     def xbee_on_message(self, address, port, value):
         """
         Message from the radio coordinator
@@ -127,7 +168,7 @@ class Xbee2MQTT(Daemon):
 
         topic = self._routes.get(
             (address, port),
-            self.default_topic_pattern.format(address=address, port=port) if self.expose_undefined_topics else False
+            self.transform_default_topic_pattern(address, port) if self.expose_undefined_topics else False
         )
         prefix = port[:4]
         if self.expose_undefined_topics and prefix in ['dio-', 'pin-']:
@@ -144,7 +185,7 @@ class Xbee2MQTT(Daemon):
         """
         value = time.strftime("%s")
         self.log(logging.INFO, "Identification received from radio: %s (%s) %s" % (address, alias, value))
-        topic = self.default_topic_pattern.format(address=address, port="seen") if self.expose_undefined_topics else False
+        topic = self.transform_default_topic_pattern(address, "seen") if self.expose_undefined_topics else False
         self.mqtt_publish(topic, value)
         self.xbee.send_query(address)
 
