@@ -212,17 +212,20 @@ class XBeeWrapper(object):
         """
         Sends a message to a remote radio
         Currently, this only supports setting a digital output pin LOW (4) or HIGH (5)
+        and setting a raw configuration for any pin of remote radio.
         """
         self.log(logging.DEBUG,
             "Sending message to address: %s, port: %s, value: %s" % (address, port, value)
         )
         try:
 
-            if port[:4] == 'dio-':
+            prefix = port[:4]
+            if prefix in ['dio-', 'pin-']:
                 address = binascii.unhexlify(address)
                 number = int(port[4:])
                 command = 'P%d' % (number - 10) if number>9 else 'D%d' % number
-                value = binascii.unhexlify('0' + str(int(value) + 4))
+                value = int(value) if prefix == 'pin-' else int(value) + 4
+                value = binascii.unhexlify('0' + str(value))
                 self.xbee.remote_at(dest_addr_long = address, command = command, parameter = value)
                 self.xbee.remote_at(dest_addr_long = address, command = 'WR' if permanent else 'AC')
                 return True
