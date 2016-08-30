@@ -172,6 +172,9 @@ class XBeeWrapper(object):
             "AT response for command: %s, status: %s" % (command, status_msg)
         )
 
+        if (status != '\x00'):
+            return
+
         if (command == 'ND'):
             alias = response['node_identifier']
             address = binascii.hexlify(response['source_addr_long'])
