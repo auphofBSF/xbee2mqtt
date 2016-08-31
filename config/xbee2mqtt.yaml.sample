@@ -7,6 +7,7 @@ daemon:
 
 general:
     sample_rate: 5
+    change_detection: False
     discovery_on_connect: True
     duplicate_check_window: 5
     expose_undefined_topics: False

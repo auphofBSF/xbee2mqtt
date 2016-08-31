@@ -262,6 +262,7 @@ if __name__ == "__main__":
     xbee.serial = serial
     xbee.default_port_name = config.get('radio', 'default_port_name', 'serial')
     xbee.sample_rate = config.get('general', 'sample_rate', 0)
+    xbee.change_detection = config.get('general', 'change_detection', False)
 
     processor = Processor(config.get('processor', 'filters', []))
 

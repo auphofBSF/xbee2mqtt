@@ -45,6 +45,9 @@ class XBeeWrapper(object):
     logger = None
 
     sample_rate = 0
+    change_detection = False
+
+    _change_detection_masks = {}
 
     buffer = dict()
 
@@ -192,6 +195,23 @@ class XBeeWrapper(object):
             self.xbee.remote_at(dest_addr_long = source_addr_long, command = 'IR', parameter = milliseconds)
 
             self.on_node_discovery(address, alias)
+
+        # Update IO Digital Change Detection mask
+        elif (command == 'IC'):
+            current_mask = int(binascii.hexlify(response), 16)
+            new_mask = self._change_detection_masks.get(address, current_mask)
+            if self.change_detection and current_mask != new_mask:
+                self.log(logging.DEBUG,
+                     "Applying new IC mask to address: %s, value: %s" % (address, '{:012b}'.format(new_mask))
+                )
+                new_mask = str(hex(new_mask))[2:]
+                new_mask = '0' * (len(new_mask) % 2) + new_mask
+                new_mask = binascii.unhexlify(new_mask)
+                source_addr_long = binascii.unhexlify(address)
+                self.xbee.remote_at(dest_addr_long = source_addr_long, command = 'IC', parameter = new_mask)
+                self.xbee.remote_at(dest_addr_long = source_addr_long, command = 'WR')
+
+        # Process retrieved pin status
         elif (re.match('[DP]\d', command)):
             prefix, number = command[:1], command[1:]
             port = 'pin-1%s' % number if (prefix == 'P') else 'pin-%s' % number
@@ -239,6 +259,7 @@ class XBeeWrapper(object):
         self.log(logging.DEBUG,
             "Sending message to address: %s, port: %s, value: %s" % (address, port, value)
         )
+
         try:
 
             prefix = port[:4]
@@ -250,12 +271,32 @@ class XBeeWrapper(object):
                 value = binascii.unhexlify('0' + str(value))
                 self.xbee.remote_at(dest_addr_long = address, command = command, parameter = value)
                 self.xbee.remote_at(dest_addr_long = address, command = 'WR' if permanent else 'AC')
-                return True
+                if self.change_detection:
+                    address = binascii.hexlify(address)
+                    self.issue_change_detection(address, port, value == '\x03')
 
+                return True
         except:
             pass
 
         return False
+
+    def issue_change_detection(self, address, port, enabled = True):
+        """
+        Sends IC command to check the response and change if it differs
+        """
+        self.log(logging.DEBUG,
+            "Sending IC command to address: %s, port: %s, enabled: %s" % (address, port, enabled)
+        )
+        offset = int(port[4:]) % 12
+        mask = int(self._change_detection_masks.get(address, 0))
+        if enabled:
+            self._change_detection_masks[address] = mask | 1 << offset
+        else:
+            self._change_detection_masks[address] = mask & ~(1 << offset)
+
+        address = binascii.unhexlify(address)
+        self.xbee.remote_at(dest_addr_long = address, command = 'IC', frame_id = 'A')
 
     def find_devices(self, vendor_id = None, product_id = None):
         """
