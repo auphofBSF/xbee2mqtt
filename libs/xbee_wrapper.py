@@ -44,6 +44,8 @@ class XBeeWrapper(object):
     xbee = None
     logger = None
 
+    sample_rate = 0
+
     buffer = dict()
 
     def errorlog(self, e):
@@ -176,9 +178,19 @@ class XBeeWrapper(object):
         if (status != '\x00'):
             return
 
+        # Process Node Discovery Command
         if (command == 'ND'):
             alias = response['node_identifier']
             address = binascii.hexlify(response['source_addr_long'])
+
+            self.log(logging.DEBUG, "Setting IO Sample Rate to %s seconds for address %s" % (self.sample_rate, address))
+
+            milliseconds = str(hex(self.sample_rate * 1000))[2:]
+            milliseconds = '0' * (len(milliseconds) % 2) + milliseconds
+            milliseconds = binascii.unhexlify(milliseconds)
+            source_addr_long = response['source_addr_long']
+            self.xbee.remote_at(dest_addr_long = source_addr_long, command = 'IR', parameter = milliseconds)
+
             self.on_node_discovery(address, alias)
         elif (re.match('[DP]\d', command)):
             prefix, number = command[:1], command[1:]

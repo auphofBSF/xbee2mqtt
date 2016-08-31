@@ -6,6 +6,7 @@ daemon:
     logging_level: 10
 
 general:
+    sample_rate: 5
     discovery_on_connect: True
     duplicate_check_window: 5
     expose_undefined_topics: False
