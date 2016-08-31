@@ -135,7 +135,7 @@ class Xbee2MQTT(Daemon):
             self.log(logging.INFO, "Sending message to MQTT broker: %s %s" % (topic, value))
             self.mqtt.publish(topic, value)
 
-    def transform_default_topic_pattern(self, address, port):
+    def transform_pattern(self, pattern, address, port):
         """
         Transform default topic pattern to expand adc/dio ports if there is a {item} whitin
         to keep compatibility with old topic patterns schemas.
@@ -150,13 +150,13 @@ class Xbee2MQTT(Daemon):
         else:
             item = ''
 
-        new_schema = re.search('{item}', self.default_topic_pattern)
+        new_schema = re.search('{item}', pattern)
         if new_schema:
             number = port[4:]
             port = "pin-%s" % number if len(item)>0 else port
-            topic = self.default_topic_pattern.format(address=address, port=port, item=item)
+            topic = pattern.format(address=address, port=port, item=item)
         else:
-            topic = self.default_topic_pattern.format(address=address, port=port)
+            topic = self.pattern.format(address=address, port=port)
 
         # Clean excess slashes.
         return re.sub('//+|/$', '', topic).rstrip('/')
@@ -169,15 +169,15 @@ class Xbee2MQTT(Daemon):
 
         topic = self._routes.get(
             (address, port),
-            self.transform_default_topic_pattern(address, port) if self.expose_undefined_topics else False
+            self.transform_pattern(self.default_topic_pattern, address, port) if self.expose_undefined_topics else False
         )
         prefix = port[:4]
         if self.expose_undefined_topics and prefix in ['dio-', 'pin-']:
-            self.mqtt.subscribe(self.default_input_topic_pattern.format(address=address, port=port))
+            self.mqtt.subscribe(self.transform_pattern(self.default_input_topic_pattern, address, port))
             if prefix == 'pin-' and value in [4, 5]:
                 number = port[4:]
                 port = 'dio-%s' % number
-                self.mqtt.subscribe(self.default_input_topic_pattern.format(address=address, port=port))
+                self.mqtt.subscribe(self.transform_pattern(self.default_input_topic_pattern, address, port))
         self.mqtt_publish(topic, value)
 
     def xbee_on_identification(self, address, alias):
@@ -186,7 +186,7 @@ class Xbee2MQTT(Daemon):
         """
         value = time.strftime("%s")
         self.log(logging.INFO, "Identification received from radio: %s (%s) %s" % (address, alias, value))
-        topic = self.transform_default_topic_pattern(address, "seen") if self.expose_undefined_topics else False
+        topic = self.transform_pattern(self.default_topic_pattern, address, "seen") if self.expose_undefined_topics else False
         self.mqtt_publish(topic, value)
         self.xbee.send_query(address)
 
