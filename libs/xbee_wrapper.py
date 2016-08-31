@@ -230,7 +230,7 @@ class XBeeWrapper(object):
                 address = binascii.unhexlify(address)
                 number = int(port[4:])
                 command = 'P%d' % (number - 10) if number>9 else 'D%d' % number
-                value = int(value) if prefix == 'pin-' else int(value) + 4
+                value = int(value) % 10 if prefix == 'pin-' else (int(value) > 0) + 4
                 value = binascii.unhexlify('0' + str(value))
                 self.xbee.remote_at(dest_addr_long = address, command = command, parameter = value)
                 self.xbee.remote_at(dest_addr_long = address, command = 'WR' if permanent else 'AC')
