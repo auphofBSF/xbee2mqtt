@@ -104,9 +104,9 @@ class Xbee2MQTT(Daemon):
                 elif item == 'digital':
                     result['port'] = 'dio-%s' % number
                 elif item == 'config':
-                    result['port'] = 'pin-%s'
+                    result['port'] = 'pin-%s' % number
 
-            data = { result['address'], result['port'] }
+            data = (result['address'], result['port'])
 
         if data:
             address, port = data
