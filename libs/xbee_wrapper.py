@@ -26,6 +26,7 @@ __license__ = 'GPL v3'
 import os
 import re
 import glob
+import time
 import binascii
 import logging
 from xbee import ZigBee as XBee
@@ -211,8 +212,10 @@ class XBeeWrapper(object):
                 continue
 
             number = int(port[4:])
+
             command = 'P%d' % (number - 10) if number>9 else 'D%d' % number
             self.xbee.remote_at(dest_addr_long = address, command = command, frame_id="A")
+            time.sleep(1)
 
     def send_message(self, address, port, value, permanent = True):
         """
