@@ -45,6 +45,9 @@ class XBeeWrapper(object):
 
     buffer = dict()
 
+    def errorlog(self, e):
+        logging.exception(e)
+
     def log(self, level, message):
         if self.logger:
             self.logger.log(level, message)
@@ -63,7 +66,7 @@ class XBeeWrapper(object):
         """
         try:
             self.log(logging.INFO, "Connecting to Xbee")
-            self.xbee = XBee(self.serial, callback=self.process)
+            self.xbee = XBee(self.serial, callback=self.process, error_callback=self.errorlog)
         except:
             return False
         return True

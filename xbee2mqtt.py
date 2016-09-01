@@ -221,7 +221,7 @@ class Xbee2MQTT(Daemon):
             try:
                 self.mqtt.loop()
             except Exception as e:
-                self.log(logging.ERROR, "Error while looping MQTT (%s)" % e)
+                logging.exception("Error while looping MQTT (%s)" % e)
 
 if __name__ == "__main__":
 
