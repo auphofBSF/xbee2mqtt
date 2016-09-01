@@ -184,10 +184,20 @@ class Xbee2MQTT(Daemon):
         """
         Identification message from remote node
         """
-        value = time.strftime("%s")
-        self.log(logging.INFO, "Identification received from radio: %s (%s) %s" % (address, alias, value))
-        topic = self.transform_pattern(self.default_topic_pattern, address, "seen") if self.expose_undefined_topics else False
-        self.mqtt_publish(topic, value)
+        now = time.strftime("%s")
+        self.log(logging.INFO, "Identification received from radio: %s (%s) %s" % (address, alias, now))
+
+        topic = self._routes.get(
+            (address, "seen"),
+            self.transform_pattern(self.default_topic_pattern, address, "seen") if self.expose_undefined_topics else False
+        )
+        self.mqtt_publish(topic, now)
+
+        topic = self._routes.get(
+            (address, "alias"),
+            self.transform_pattern(self.default_topic_pattern, address, "alias") if self.expose_undefined_topics else False
+        )
+        self.mqtt_publish(topic, alias)
         self.xbee.send_query(address)
 
     def do_reload(self):
