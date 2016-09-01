@@ -89,7 +89,7 @@ class XBeeWrapper(object):
         except:
             pass
 
-        id = packet['id']
+        id = packet.get('id', None)
 
         # Data sent through the serial connection of the remote radio
         if (id == "rx"):
@@ -123,21 +123,21 @@ class XBeeWrapper(object):
 
         # Node Identification Indicator received
         elif (id == "node_id_indicator"):
-            alias = packet['node_id']
+            alias = packet.get('node_id', None)
             self.on_identification(address, alias)
 
         # Response received after a local command request
         elif (id == "at_response"):
-            status = packet['status']
-            command = packet['command']
-            response = packet['parameter']
+            status = packet.get('status', None)
+            command = packet.get('command', None)
+            response = packet.get('parameter', None)
             self.on_response(status, command, response, "local")
 
         # Response received after a remote command request
         elif (id == "remote_at_response"):
-            status = packet['status']
-            command = packet['command']
-            response = packet['parameter']
+            status = packet.get('status', None)
+            command = packet.get('command', None)
+            response = packet.get('parameter', None)
             self.on_response(status, command, response, address)
 
     def on_identification(self, address, alias):
