@@ -181,7 +181,8 @@ class XBeeWrapper(object):
             address = binascii.hexlify(response['source_addr_long'])
             self.on_node_discovery(address, alias)
         elif (re.match('[DP]\d', command)):
-            port = "pin-%s" % command[1:]
+            prefix, number = command[:1], command[1:]
+            port = 'pin-1%s' % number if (prefix == 'P') else 'pin-%s' % number
             value = int(binascii.hexlify(response), 16)
             self.on_message(address, port, value)
         else:
