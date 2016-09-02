@@ -174,10 +174,13 @@ class Xbee2MQTT(Daemon):
         prefix = port[:4]
         if self.expose_undefined_topics and prefix in ['dio-', 'pin-']:
             self.mqtt.subscribe(self.transform_pattern(self.default_input_topic_pattern, address, port))
+            number = port[4:]
+            digital = 'dio-%s' % number
+            digital_topic = self.transform_pattern(self.default_input_topic_pattern, address, digital)
             if prefix == 'pin-' and value in [4, 5]:
-                number = port[4:]
-                port = 'dio-%s' % number
-                self.mqtt.subscribe(self.transform_pattern(self.default_input_topic_pattern, address, port))
+                self.mqtt.subscribe(digital_topic)
+            else:
+                self.mqtt.unsubscribe(digital_topic)
         self.mqtt_publish(topic, value)
 
     def xbee_on_identification(self, address, alias):

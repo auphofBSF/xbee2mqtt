@@ -68,6 +68,7 @@ class MosquittoWrapper(Mosquitto):
         self.on_message = self.__on_message
         self.on_disconnect = self.__on_disconnect
         self.on_subscribe = self.__on_subscribe
+        self.on_unsubscribe = self.__on_unsubscribe
         self.on_log = self.__on_log
         if self.username:
             self.username_pw_set(self.username, self.password)
@@ -86,6 +87,17 @@ class MosquittoWrapper(Mosquitto):
             rc, mid = Mosquitto.subscribe(self, topic, 0)
             self._subscriptions[mid] = topic
             self.log(logging.INFO, "Sent subscription request to topic %s" % topic)
+
+    def unsubscribe(self, topics):
+        """
+        Unsubscribe of a given topic
+        """
+        if not isinstance(topics, list):
+            topics = [topics]
+        for topic in topics:
+            rc, mid = Mosquitto.unsubscribe(self, topic)
+            self._subscriptions[mid] = topic
+            self.log(logging.INFO, "Sent unsubscription request of topic %s" % topic)
 
     def publish(self, topic, value, qos=None, retain=None):
         """
@@ -135,6 +147,13 @@ class MosquittoWrapper(Mosquitto):
         """
         topic = self._subscriptions.get(mid, 'Unknown')
         self.log(logging.INFO, "Subscription to topic %s confirmed" % topic)
+
+    def __on_unsubscribe(self, mosq, obj, mid):
+        """
+        Callback when succeeded an unsubscription
+        """
+        topic = self._subscriptions.get(mid, 'Unknown')
+        self.log(logging.INFO, "Unsubscription of topic %s confirmed" % topic)
 
     def __on_log(self, mosq, obj, level, string):
         self.log(logging.DEBUG, string)

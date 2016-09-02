@@ -271,6 +271,7 @@ class XBeeWrapper(object):
                 value = binascii.unhexlify('0' + str(value))
                 self.xbee.remote_at(dest_addr_long = address, command = command, parameter = value)
                 self.xbee.remote_at(dest_addr_long = address, command = 'WR' if permanent else 'AC')
+                self.xbee.remote_at(dest_addr_long = address, command = command, frame_id = 'A')
                 if self.change_detection:
                     address = binascii.hexlify(address)
                     self.issue_change_detection(address, port, value == '\x03')
