@@ -284,7 +284,12 @@ if __name__ == "__main__":
     xbee2mqtt.stderr = resolve_path(config.get('daemon', 'stderr', xbee2mqtt.stdout))
     xbee2mqtt.discovery_on_connect = config.get('general', 'discovery_on_connect', True)
     xbee2mqtt.duplicate_check_window = config.get('general', 'duplicate_check_window', 5)
-    xbee2mqtt.default_topic_pattern = config.get('general', 'default_topic_pattern', '/raw/xbee/{address}/{port}')
+    xbee2mqtt.default_output_topic_pattern = config.get(
+        'general', 'default_output_topic_pattern', '/raw/xbee/{address}/{port}'
+    )
+    xbee2mqtt.default_topic_pattern = config.get(
+        'general', 'default_topic_pattern', xbee2mqtt.default_output_topic_pattern
+    )
     xbee2mqtt.default_input_topic_pattern = config.get(
         'general', 'default_input_topic_pattern', xbee2mqtt.default_topic_pattern + '/set'
     )
