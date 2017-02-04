@@ -16,7 +16,7 @@ case "$ACTION" in
 
     "setup")
         if [ ! -d $FOLDER ]; then
-            virtualenv $FOLDER
+            virtualenv $FOLDER --python=python2.7
         fi
 
         $PIP install --upgrade ConfigParser
