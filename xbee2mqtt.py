@@ -228,6 +228,9 @@ class Xbee2MQTT(Daemon):
 
         if self.discovery_on_connect:
             #Work around for  ND issues see- https://github.com/nioinnovation/python-xbee/issues/1>
+            self.log(logging.INFO, "Coordinator Firmware Version")
+            self.xbee.xbee.at(command='VR')
+
             self.log(logging.INFO, "Set Node Discovery Options - disable transmist of DD in ND")
             self.xbee.xbee.at(command='NO',
                               parameter=b'\x02')
