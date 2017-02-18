@@ -87,7 +87,7 @@ class XBeeWrapper(object):
             0x97: ZigBee Remote Command Response (remote_at_response)
         """
 
-        self.log(logging.DEBUG, packet)
+        self.log(logging.DEBUG,  "xbee-wrapper.process - packet:%s"%( packet))
 
         try:
             address = binascii.hexlify(packet['source_addr_long'])
@@ -103,10 +103,12 @@ class XBeeWrapper(object):
             # we buffer the data until we get an EOL
             self.buffer[address] = self.buffer.get(address,'') + packet['rf_data']
             count = self.buffer[address].count('\n')
+            self.log(logging.DEBUG, "xbee-wrapper.process (rx) count: %s " % (count))
             if (count):
                 lines = self.buffer[address].splitlines()
                 try:
                     self.buffer[address] = lines[count:][0]
+                    self.log(logging.DEBUG, "xbee-wrapper(rx) ---try :lines[count:][0]: %s " % (lines[count:][0]))
                 except:
                     self.buffer[address] = ''
                 for line in lines[:count]:
@@ -116,6 +118,8 @@ class XBeeWrapper(object):
                     except:
                         value = line
                         port = self.default_port_name
+                        self.log(logging.DEBUG, "xbee-wrapper(rx) ---except :line: %s port: %s value:%s" % (line, port, value))
+                    self.log(logging.DEBUG, "xbee-wrapper(rx) line: %s port: %s value:%s" % (line, port, value))
                     self.on_message(address, port, value)
 
         # Data received from an IO data sample
@@ -128,6 +132,7 @@ class XBeeWrapper(object):
 
         # Node Identification Indicator received
         elif (id == "node_id_indicator"):
+            self.log(logging.DEBUG, "xbee-wrapper(rx node_id_indicator) packet:%s"%( packet))
             alias = packet.get('node_id', None)
             self.on_identification(address, alias)
 

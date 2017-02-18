@@ -227,6 +227,11 @@ class Xbee2MQTT(Daemon):
             self.stop()
 
         if self.discovery_on_connect:
+            #Work around for  ND issues see- https://github.com/nioinnovation/python-xbee/issues/1>
+            self.log(logging.INFO, "Set Node Discovery Options - disable transmist of DD in ND")
+            self.xbee.xbee.at(command='NO',
+                              parameter=b'\x02')
+
             self.log(logging.INFO, "Requesting Node Discovery")
             self.xbee.xbee.at(command='ND')
 
@@ -318,6 +323,6 @@ if __name__ == "__main__":
             sys.exit(2)
         sys.exit(0)
     else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
+        print "usage: %s start|stop|restart|reload" % sys.argv[0]
         sys.exit(2)
 
