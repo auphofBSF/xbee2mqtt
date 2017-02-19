@@ -316,6 +316,7 @@ if __name__ == "__main__":
         if 'start' == sys.argv[1]:
             xbee2mqtt.start()
         elif 'stop' == sys.argv[1]:
+            #xbee2mqtt.cleanup()  # cant do this as it is running in another process, the stop is a SIGTERM
             xbee2mqtt.stop()
         elif 'restart' == sys.argv[1]:
             xbee2mqtt.restart()

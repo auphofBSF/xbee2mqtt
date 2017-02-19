@@ -31,7 +31,7 @@ import binascii
 import logging
 from xbee import ZigBee as XBee
 
-class XBeeWrapper(object):
+class XBeeWrapper(XBee):
     """
     Helper class for the python-xbee module.
     It processes API packets into simple address/port/value groups.
@@ -50,6 +50,12 @@ class XBeeWrapper(object):
     _change_detection_masks = {}
 
     buffer = dict()
+    def __init__(self, *args, **kwargs):
+        pass
+        #XBee.__init__(self)
+
+        # Call the super class constructor to save the serial port
+        #super(XBee, self).__init__(*args, **kwargs)
 
     def errorlog(self, e):
         logging.exception(e)
@@ -62,7 +68,7 @@ class XBeeWrapper(object):
         """
         Closes serial port
         """
-        self.xbee.halt()
+        #self.xbee.halt()
         self.serial.close()
         return True
 

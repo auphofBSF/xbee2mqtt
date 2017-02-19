@@ -124,6 +124,7 @@ class MosquittoWrapper(Mosquitto):
         """
         Callback when disconnecting from the MQTT broker
         """
+        self.publish(self.status_topic % self._client_id, "0")
         self.connected = False
         self.log(logging.INFO, "Disconnected from MQTT broker")
         if rc != 0:
