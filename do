@@ -14,9 +14,17 @@ fi
 
 case "$ACTION" in
 
+    "activate")
+        source $FOLDER/bin/activate
+        ;;
+
+    "deactivate")
+        deactivate
+        ;;
+
     "setup")
         if [ ! -d $FOLDER ]; then
-            virtualenv $FOLDER
+            virtualenv $FOLDER --python=python2.7
         fi
 
         $PIP install --upgrade ConfigParser
@@ -28,7 +36,7 @@ case "$ACTION" in
 		$PIP install --upgrade xbee
         ;;
 
-    "start" | "stop" | "restart")
+    "start" | "stop" | "restart" | "reload")
         $PYTHON xbee2mqtt.py $ACTION
         ;;
 
