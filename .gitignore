@@ -8,5 +8,7 @@ var/log/*
 var/run/*
 .venv
 .coverage
+.vscode
+.idea
 !.empty
 
